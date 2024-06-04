@@ -1,85 +1,91 @@
+import 'dart:core';
+
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: LoginPage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
-
+class LoginPage extends StatefulWidget {
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _LoginPageState createState() => _LoginPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  double _counter = 0.0;
-  double _myFontSize = 30.0;
-  void _incrementCounter() {
+class _LoginPageState extends State<LoginPage> {
+  final TextEditingController _loginController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  late TextEditingController _controller; // Declare the _controller variable
+
+  String imageSource = 'images/question.png';
+
+  void _login() {
     setState(() {
-      if(_counter <99){
-        _counter++;
+      if (_passwordController.text == 'QWERTY123') {
+        imageSource = 'images/idea.png';
+      } else {
+        imageSource = 'images/stop.png';
       }
     });
   }
-  void setNewValue(double value) {
-    setState(() {
-      _counter = value;
-      _myFontSize = value;
 
-    });
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(); // Initialize the _controller variable
   }
+
+  @override
+  void dispose() {
+    _controller.dispose(); // Dispose of the _controller
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        title: Text('Flutter Demo Home Page'),
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text('You have pushed the button this many times:'),
-            Text('$_counter', style: TextStyle(fontSize: _myFontSize),
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            TextField(
+              controller: _loginController,
+              decoration: InputDecoration(
+                labelText: 'Login name',
+              ),
             ),
-            Text(
-              '$_counter',
-              style: TextStyle(fontSize: _myFontSize),
+            TextField(
+              controller: _passwordController,
+              decoration: InputDecoration(
+                labelText: 'Password',
+              ),
+              obscureText: true,
             ),
-            Slider(
-              value: _counter,
-              min: 0.0,
-              max: 100.0,
-              onChanged: setNewValue,
-
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _login,
+              child: Text('Login'),
+            ),
+            SizedBox(height: 20),
+            Image.asset(
+              imageSource,
+              width: 300,
+              height: 300,
             ),
           ],
         ),
-      ),
-
-
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
       ),
     );
   }
