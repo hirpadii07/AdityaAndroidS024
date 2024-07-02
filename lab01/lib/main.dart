@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(MyApp());
@@ -9,148 +8,114 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: LoginPage(),
+      title: 'To-Do List',
+      home: ToDoListPage(),
     );
   }
 }
 
-class LoginPage extends StatefulWidget {
+class ToDoListPage extends StatefulWidget {
   @override
-  _LoginPageState createState() => _LoginPageState();
+  _ToDoListPageState createState() => _ToDoListPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSavedData();
-  }
-
-  Future<void> _loadSavedData() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? savedUsername = prefs.getString('username');
-      String? savedPassword = prefs.getString('password');
-      print('Loaded Username: $savedUsername'); // Debug print
-      print('Loaded Password: $savedPassword'); // Debug print
-      if (savedUsername != null && savedPassword != null) {
-        setState(() {
-          _usernameController.text = savedUsername;
-          _passwordController.text = savedPassword;
-        });
-        final snackBar = SnackBar(
-          content: Text('Login information loaded'),
-          action: SnackBarAction(
-            label: 'Clear Saved Data',
-            onPressed: () {
-              _clearSavedData();
-            },
-          ),
-        );
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        });
-      } else {
-        print('No saved data found.');
-      }
-    } catch (e) {
-      print('Error loading saved data: $e');
-    }
-  }
-
-  Future<void> _clearSavedData() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.remove('username');
-      await prefs.remove('password');
-      setState(() {
-        _usernameController.text = '';
-        _passwordController.text = '';
-      });
-      print('Cleared saved data.');
-    } catch (e) {
-      print('Error clearing saved data: $e');
-    }
-  }
-
-  Future<void> _saveData(String username, String password) async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('username', username);
-      await prefs.setString('password', password);
-      print('Saved Username: $username'); // Debug print
-      print('Saved Password: $password'); // Debug print
-    } catch (e) {
-      print('Error saving data: $e');
-    }
-  }
-
-  void _showSaveDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Save Login Information'),
-          content: Text('Would you like to save your username and password for next time?'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                _saveData(_usernameController.text, _passwordController.text);
-                Navigator.pop(context);
-              },
-              child: Text('Yes'),
-            ),
-            TextButton(
-              onPressed: () {
-                _clearSavedData();
-                Navigator.pop(context);
-              },
-              child: Text('No'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+class _ToDoListPageState extends State<ToDoListPage> {
+  List<String> todoItems = [];
+  TextEditingController _controller = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Login Page'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text('To-Do List'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: <Widget>[
-            TextField(
-              controller: _usernameController,
-              decoration: InputDecoration(labelText: 'Username'),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton(
+                  child: Text("Add"),
+                  onPressed: () {
+                    setState(() {
+                      todoItems.add(_controller.value.text);
+                      _controller.clear();
+                    });
+                  },
+                ),
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    decoration: InputDecoration(
+                      hintText: 'Enter a to-do item',
+                    ),
+                  ),
+                ),
+              ],
             ),
-            TextField(
-              controller: _passwordController,
-              decoration: InputDecoration(labelText: 'Password'),
-              obscureText: true,
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                _showSaveDialog();
+          ),
+          Expanded(
+            child: todoItems.isEmpty
+                ? Center(
+              child: Text("There are no items in the list"),
+            )
+                : ListView.builder(
+              itemCount: todoItems.length,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onLongPress: () {
+                    _showDeleteDialog(index);
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text("Row number: ${index + 0}"),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(todoItems[index]),
+                      ),
+                    ],
+                  ),
+                );
               },
-              child: Text('Login'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteDialog(int index) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Delete Item"),
+          content: Text("Do you want to delete this item?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  todoItems.removeAt(index);
+                });
+                Navigator.of(context).pop();
+              },
+              child: Text("Yes"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("No"),
             ),
           ],
-        ),
-      ),
+        );
+      },
     );
   }
 }
